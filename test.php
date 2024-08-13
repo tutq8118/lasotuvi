@@ -8,6 +8,7 @@ $data = array(
     "day" => 10,
     "month" => 10,
     "year" => 1991,
+    "calendar" => true,
     "hour" => 10,
     "minute" => 59,
     "gender" => false,

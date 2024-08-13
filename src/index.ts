@@ -20,6 +20,7 @@ const bodySchema = object({
   day: number().required().min(1).max(31),
   month: number().required().min(1).max(12),
   year: number().required().min(1911),
+  calendar: bool().required(),
   hour: number().required().min(0).max(23),
   minute: number().required().min(0).max(59),
   gender: bool().required(),
@@ -42,6 +43,11 @@ async function fillFormAndSubmit(page: Page, formData: any): Promise<string | nu
     await page.select('select[name="dayOfDOB"]', formData.day.toString());
     await page.select('select[name="monthOfDOB"]', formData.month.toString());
     await page.locator('input[name="yearOfDOB"]').fill(formData.year.toString());
+
+    formData.calendar 
+      ? await page.locator('#lichDuongRes').click() 
+      : await page.locator('#lichAmRes').click();
+
     await page.select('select[name="hourOfDOB"]', formData.hour.toString());
     await page.select('select[name="minOfDOB"]', formData.minute.toString());
 
@@ -54,6 +60,11 @@ async function fillFormAndSubmit(page: Page, formData: any): Promise<string | nu
     await page.locator('button[type="submit"]').click();
 
     await page.waitForSelector("#content-la-so", { timeout: 10000 });
+
+    await page.$eval('::-p-xpath(//p[contains(text(), "TRANG TỬ VI CỔ HỌC HÀNG ĐẦU VIỆT NAM")])', el => el.remove());
+    await page.$eval('::-p-xpath(//a[contains(text(), "tuvi.vn")])', el => el.remove());
+    await page.$eval('::-p-xpath(//p[contains(text(), "Hotline")])', el => el.remove());
+
     return await page.evaluate(() => document.querySelector('#content-la-so')?.outerHTML || null);
   } catch (error) {
     console.error("Error filling form and submitting:", error);
