@@ -35,6 +35,7 @@ async function initializeBrowser(): Promise<Browser> {
   return browser;
 }
 
+
 async function fillFormAndSubmit(page: Page, formData: any): Promise<string | null> {
   try {
     await page.goto("https://tuvi.vn/lap-la-so-tu-vi", { waitUntil: 'networkidle2' });
@@ -59,11 +60,17 @@ async function fillFormAndSubmit(page: Page, formData: any): Promise<string | nu
     await page.select('select[name="viewMonth"]', formData.viewMonth.toString());
     await page.locator('button[type="submit"]').click();
 
-    await page.waitForSelector("#content-la-so", { timeout: 10000 });
+    await page.waitForNavigation({timeout: 10000});
 
-    await page.$eval('::-p-xpath(//p[contains(text(), "TRANG TỬ VI CỔ HỌC HÀNG ĐẦU VIỆT NAM")])', el => el.remove());
-    await page.$eval('::-p-xpath(//a[contains(text(), "tuvi.vn")])', el => el.remove());
-    await page.$eval('::-p-xpath(//p[contains(text(), "Hotline")])', el => el.remove());
+    await page.waitForSelector("#content-la-so", { timeout: 2000 });
+
+    try {
+      await page.$eval('::-p-xpath(//p[contains(text(), "TRANG TỬ VI CỔ HỌC HÀNG ĐẦU VIỆT NAM")])', el => el.remove());
+      await page.$eval('::-p-xpath(//a[contains(text(), "tuvi.vn")])', el => el.remove());
+      await page.$eval('::-p-xpath(//p[contains(text(), "Hotline")])', el => el.remove());
+    } catch (err) {
+      console.log(err);
+    }
 
     return await page.evaluate(() => document.querySelector('#content-la-so')?.outerHTML || null);
   } catch (error) {
@@ -83,7 +90,7 @@ app.post("/api/tuvi", async (req: Request, res: Response) => {
     await page.setViewport({ width: 1920, height: 1080 })
     await page.setRequestInterception(true);
     page.on("request", (request) => {
-      if (request.resourceType() === "image") {
+      if (request.resourceType() === "image" || request.url().includes("google")) {
         request.abort();
       } else {
         request.continue();
